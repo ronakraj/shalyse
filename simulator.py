@@ -26,10 +26,10 @@ for row in data_reader:
 
 # Test simulation
 scenario = {
-    'initial': "10000",   # Initial invested amount, $ AUD
-    'topup': "0",         # Regular contributions, $ AUD
-    'freq': 0,            # Frequency of contribution, months
-    'period': 10          # Total investment horizon, years
+    'initial': 10000,       # Initial invested amount, $ AUD
+    'topup': 0,             # Regular contributions, $ AUD
+    'freq': 0,              # Frequency of contribution, months
+    'period': 5             # Total investment horizon, years
 }
 
 growth = []
@@ -52,8 +52,30 @@ print("Frequency: \t " + str(scenario['freq']) + " per month")
 print("Horizon: \t" + str(scenario['period']) + " years")
 print("*************************************************")
 print("RESULT")
-print("Min: \t" + str(round(min(growth) * 100, 2)) + " %")
-print("Med: \t" + str(round(statistics.median(growth) * 100, 2)) + " %")
-print("Mean: \t" + str(round(statistics.mean(growth) * 100, 2)) + "%")
-print("Max: \t" + str(round(max(growth) * 100, 2)) + " %")
+
+result = {
+    'min': {'perc': round(min(growth) * 100, 2), 
+            'amount': round((min(growth) + 1) * scenario['initial'], 2)
+            },
+    'median': {'perc': round(statistics.median(growth) * 100, 2),
+               'amount': round((statistics.median(growth) + 1) * \
+                   scenario['initial'], 2)
+              },
+    'mean': {'perc': round(statistics.mean(growth) * 100, 2),
+               'amount': round((statistics.mean(growth) + 1) * \
+                   scenario['initial'], 2)
+              },
+    'max': {'perc': round(max(growth) * 100, 2), 
+            'amount': round((max(growth) + 1) * scenario['initial'], 2)
+            }
+}
+
+print("Min: \t" + str(result['min']['perc']) + " %" + \
+    " \t $" + str(round(result['min']['amount'] - scenario['initial'], 2)))
+print("Med: \t" + str(result['median']['perc']) + " %" + \
+    " \t $" + str(round(result['median']['amount'] - scenario['initial'], 2)))
+print("Mean: \t" + str(result['mean']['perc']) + " %" + \
+    " \t $" + str(round(result['mean']['amount'] - scenario['initial'], 2)))
+print("Max: \t" + str(result['max']['perc']) + " %" + \
+    " \t $" + str(round(result['max']['amount'] - scenario['initial'], 2)))
 print("*************************************************")
