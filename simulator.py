@@ -27,55 +27,90 @@ for row in data_reader:
 # Test simulation
 scenario = {
     'initial': 10000,       # Initial invested amount, $ AUD
-    'topup': 0,             # Regular contributions, $ AUD
-    'freq': 0,              # Frequency of contribution, months
-    'period': 5             # Total investment horizon, years
+    'topup': 1000,             # Regular contributions, $ AUD
+    'period': 365,            # Time between contributions, days
+    'horizon': 5            # Total investment horizon, years
 }
 
-growth = []
+# Total contributed over investment horizon is summation of principal
+# and regular contributions.
+total_contrib = scenario['initial']
+if scenario['period'] > 0:
+    total_contrib = total_contrib + scenario['topup'] * \
+    (scenario['horizon'] * 365 / scenario['period'])
+
+# Simulation over all historical data
+total_profit = []
 for i in range(0, len(data_dict[headers[0]])):
-    next_period = scenario['period'] * 365 + i
+    next_period = scenario['horizon'] * 365 + i
 
     if next_period < len(data_dict[headers[0]]):
         # 0: Date, 1: Open, 2: High, 3: Low, 4: Close, 5: Adj Close 
         # and 6: Volume
-        growth.append((float(data_dict[headers[5]][next_period]) - \
-            float(data_dict[headers[5]][i])) / float(data_dict[headers[5]][i]))
+        final_price = float(data_dict[headers[5]][next_period])
+
+        # Calculate profit on regular contributions
+        topup_profit = 0
+        if scenario['period'] > 0:
+
+            for j in range(i + scenario['period'], next_period, \
+                    scenario['period']):
+                # Current share price at simulated starting point
+                current_price = float(data_dict[headers[5]][j])
+
+                # Calculate total profits made by regular topups over simulated
+                # interval.
+                topup_profit = topup_profit + \
+                    ((1 + ((final_price - current_price) / current_price)) * \
+                       scenario['topup'])
+        
+        # Calculate profit on principal
+        current_price = float(data_dict[headers[5]][i])
+        princ_profit = (1 + ((final_price - current_price) / current_price)) * \
+            scenario['initial']
+
+        # Save profit over principal and topups in this scenario
+        total_profit.append(princ_profit + topup_profit)
+
     else:
         break
 
 print("*************************************************")
-print("SCENARIO")
+print("\t SCENARIO\n")
 print("Initial: \t $" + str(scenario['initial']))
 print("Top-up: \t $" + str(scenario['topup']))
-print("Frequency: \t " + str(scenario['freq']) + " per month")
-print("Horizon: \t" + str(scenario['period']) + " years")
+print("Period: \t " + str(scenario['period']) + " days between top-ups")
+print("Horizon: \t " + str(scenario['horizon']) + " years")
+print("Contributions: \t $" + str(total_contrib))
 print("*************************************************")
-print("RESULT")
+print("\t RESULTS\n")
 
 result = {
-    'min': {'perc': round(min(growth) * 100, 2), 
-            'amount': round((min(growth) + 1) * scenario['initial'], 2)
+    'min': {'perc': round((min(total_profit) - total_contrib) / total_contrib \
+                            * 100, 2), 
+            'amount': round(min(total_profit), 2)
             },
-    'median': {'perc': round(statistics.median(growth) * 100, 2),
-               'amount': round((statistics.median(growth) + 1) * \
-                   scenario['initial'], 2)
+    'median': {'perc': round((statistics.median(total_profit) - \
+                             total_contrib) / total_contrib * 100, 2),
+               'amount': round(statistics.median(total_profit), 2)
               },
-    'mean': {'perc': round(statistics.mean(growth) * 100, 2),
-               'amount': round((statistics.mean(growth) + 1) * \
-                   scenario['initial'], 2)
+    'mean': {'perc': round((statistics.mean(total_profit) - \
+                             total_contrib) / total_contrib * 100, 2),
+               'amount': round(statistics.mean(total_profit), 2)
               },
-    'max': {'perc': round(max(growth) * 100, 2), 
-            'amount': round((max(growth) + 1) * scenario['initial'], 2)
+    'max': {'perc': round((max(total_profit) - total_contrib) / total_contrib \
+                            * 100, 2), 
+            'amount': round(max(total_profit), 2)
             }
 }
 
+
 print("Min: \t" + str(result['min']['perc']) + " %" + \
-    " \t $" + str(round(result['min']['amount'] - scenario['initial'], 2)))
+    " \t $" + str(round(result['min']['amount'] - total_contrib, 2)))
 print("Med: \t" + str(result['median']['perc']) + " %" + \
-    " \t $" + str(round(result['median']['amount'] - scenario['initial'], 2)))
+    " \t $" + str(round(result['median']['amount'] - total_contrib, 2)))
 print("Mean: \t" + str(result['mean']['perc']) + " %" + \
-    " \t $" + str(round(result['mean']['amount'] - scenario['initial'], 2)))
+    " \t $" + str(round(result['mean']['amount'] - total_contrib, 2)))
 print("Max: \t" + str(result['max']['perc']) + " %" + \
-    " \t $" + str(round(result['max']['amount'] - scenario['initial'], 2)))
+    " \t $" + str(round(result['max']['amount'] - total_contrib, 2)))
 print("*************************************************")
