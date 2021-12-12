@@ -1,3 +1,4 @@
 # Ignore temporary data files.
 *.json
 *.csv
+*.pyc

@@ -17,7 +17,7 @@ class Retriever:
         self.ticker = ticker
         self.period = period
         self.csv_fp = self.ticker + ".csv"
-        self.json_fp = self.ticker + ".csv"
+        self.json_fp = self.ticker + ".json"
         self.data, self.info = self._get_ticker_data(\
             self.ticker, self.period, self.csv_fp, self.json_fp)
 
@@ -31,21 +31,25 @@ class Retriever:
         """
         
         # Check if data for ticker exists already
-        if not os.path.isfile(ticker + ".csv"):
+        if not os.path.isfile(csv_fp):
             # Retrieve price data for specified time period 
             # (default 1 day interval) and save to csv.
             hist = yf.download(ticker, period=period)
             hist.to_csv(csv_fp)
 
-            if not os.path.isfile(ticker + ".json"):
+            if not os.path.isfile(json_fp):
                 # Retrieve ticker info and save to json.
                 stock = yf.Ticker(ticker)
                 with open(json_fp, "w") as f:
                     json.dump(stock.info, f, ensure_ascii=False, indent=4)
 
-        # Save ticker data into dictionary
+        # Store ticker data into dictionary for runtime
         data = pd.read_csv(csv_fp)
         data["Date"] = pd.to_datetime(data["Date"], format="%Y-%m-%d")
         data.sort_values("Date", inplace=True)
+
+        # Store ticker information into dictionary for runtime
+        with open(json_fp) as fp:
+            info = json.load(fp)
         
-        return data, stock.info
+        return data, info

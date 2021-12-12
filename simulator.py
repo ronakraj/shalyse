@@ -3,9 +3,7 @@
 # By Ronakraj Gosalia
 ###############################################################
 
-import csv
 import statistics
-import os
 from retriever import Retriever
 from typing import List
 
