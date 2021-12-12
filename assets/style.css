@@ -12,6 +12,14 @@ body {
     justify-content: center;
 }
 
+.warning {
+    background-color: #da0101;
+    height: 256px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 .header-emoji {
     font-size: 48px;
     margin: 0 auto;

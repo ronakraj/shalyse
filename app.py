@@ -1,11 +1,8 @@
 import dash
 from dash import dcc
 from dash import html
-import pandas as pd
+import numpy as np
 
-data = pd.read_csv("asx.csv")
-data["Date"] = pd.to_datetime(data["Date"], format="%Y-%m-%d")
-data.sort_values("Date", inplace=True)
 
 external_stylesheets = [
     {
@@ -32,12 +29,28 @@ app.layout = html.Div(
                     " strategies over historical data. ",
                     className="header-description",
                 ),
-                html.P(
-                    children="Created by RonakrajGosalia.",
-                    className="header-description",
-                )
             ],
             className="header",
+        ),
+        html.Div(
+            children=[
+                html.Div(
+                    children=[
+                        html.Div(children="Index", className="menu-title"),
+                        dcc.Dropdown(
+                            id="index-filter",
+                            options=[
+                                {"label": region, "value": region}
+                                for region in np.sort(data.region.unique())
+                            ],
+                            value="Albany",
+                            clearable=False,
+                            className="dropdown",
+                        ),
+                    ]
+                ),
+            ],
+            className="menu",
         ),
         html.Div(
             children=[
@@ -67,7 +80,21 @@ app.layout = html.Div(
                 )
             ],
             className="wrapper",
-        )
+        ),
+        html.Div(
+            children=[
+                html.P(children="⚠️", className="header-emoji"),
+                html.P(
+                    children="Disclaimer: Results from this simulator should not "
+                    "be taken as financial advice. Past performance is not "
+                    "a reliable indicator of future performance. Every individual"
+                    " situation is different and you should consult a qualified "
+                    "financial planner and/or tax accountant.",
+                    className="header-description",
+                ),
+            ],
+            className="warning",
+        ),
     ]
 )
 
