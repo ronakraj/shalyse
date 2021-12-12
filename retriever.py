@@ -9,7 +9,11 @@ import os
 import pandas as pd
 
 class Retriever:
-    def __init__(self, ticker, period="max"):
+    def __init__(self, ticker: str, period="max") -> None:
+        """
+        Main class for retrieving data from Yahoo Finance.
+        """
+        
         self.ticker = ticker
         self.period = period
         self.csv_fp = self.ticker + ".csv"
