@@ -12,7 +12,7 @@ ticker = "^AXJO"
 scenario = {
     'initial': 10000,       # Initial invested amount, $ AUD
     'topup': 1000,          # Regular contributions, $ AUD
-    'period': 28,           # Time between contributions, days
+    'period': 30,           # Time between contributions, days
     'horizon': 4            # Total investment horizon, years
 }
 
@@ -114,29 +114,36 @@ class Shalyse:
         
         # Evaluate all statistical data to 2 decimal places
         stats['min']['perc'] = round((min(total_profit)) / total_contrib \
-                                * 100, 2)
-        stats['min']['abs'] = round(min(total_profit), 2)
+                                * 100, 1)
+        stats['min']['abs'] = round(min(total_profit), 0)
 
         stats['median']['perc'] = round((statistics.median(total_profit)) / \
-            total_contrib * 100, 2)
-        stats['median']['abs'] = round(statistics.median(total_profit), 2)
+            total_contrib * 100, 1)
+        stats['median']['abs'] = round(statistics.median(total_profit), 0)
 
         stats['-1std']['perc'] = round((statistics.mean(total_profit) - \
-            (statistics.stdev(total_profit) / 2)) / total_contrib * 100, 2)
+            (statistics.stdev(total_profit) / 2)) / total_contrib * 100, 1)
         stats['-1std']['abs'] = round(statistics.mean(total_profit) - \
-            (statistics.stdev(total_profit) / 2), 2)
+            (statistics.stdev(total_profit) / 2), 0)
 
         stats['mean']['perc'] = round((statistics.mean(total_profit)) / \
-            total_contrib * 100, 2)
-        stats['mean']['abs'] = round(statistics.mean(total_profit), 2)
+            total_contrib * 100, 1)
+        stats['mean']['abs'] = round(statistics.mean(total_profit), 0)
 
         stats['+1std']['perc'] = round((statistics.mean(total_profit) + \
-            (statistics.stdev(total_profit) / 2)) / total_contrib * 100, 2)
+            (statistics.stdev(total_profit) / 2)) / total_contrib * 100, 1)
         stats['+1std']['abs'] = round(statistics.mean(total_profit) + \
-            (statistics.stdev(total_profit) / 2), 2)
+            (statistics.stdev(total_profit) / 2), 0)
 
         stats['max']['perc'] = round((max(total_profit)) / total_contrib \
-                                * 100, 2)
-        stats['max']['abs'] = round(max(total_profit), 2)
+                                * 100, 1)
+        stats['max']['abs'] = round(max(total_profit), 0)
+
+        # Display string for each statistic
+        for stat in stats:
+            stats[stat]['display'] = "{0} {2} ({1:+} {2}) ({3:+} %)".format(
+            round(self.total_contrib + stats[stat]['abs'], 0),
+            stats[stat]['abs'], self.info['currency'], 
+            stats[stat]['perc'])
 
         return stats

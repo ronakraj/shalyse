@@ -7,6 +7,7 @@ import yfinance as yf
 import json
 import os
 import pandas as pd
+import numpy as np
 
 class Retriever:
     def __init__(self, ticker: str, period="max") -> None:
@@ -47,9 +48,10 @@ class Retriever:
         data = pd.read_csv(csv_fp)
         data["Date"] = pd.to_datetime(data["Date"], format="%Y-%m-%d")
         data.sort_values("Date", inplace=True)
-
+        
         # Store ticker information into dictionary for runtime
         with open(json_fp) as fp:
             info = json.load(fp)
-        
+        info["years"] = int(np.floor(len(data) / 365))
+
         return data, info
