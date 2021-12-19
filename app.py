@@ -49,14 +49,26 @@ topup_freq_opts = dcc.Dropdown(
     clearable = False,       
 )
 
+max_mark = int(shalyse.info['years'] / 2)
+new_marks = range(1, max_mark, max(int(max_mark / 10), 1))
+hori_opts_marks = {}
+for mark in new_marks:
+    hori_opts_marks[int(mark)] = str(mark)
 horizon_opts = dcc.Slider(
-    id="hori-opts",
+    id = "hori-opts",
     min = 1,
-    max = int(shalyse.info['years'] / 2),
-    marks = {i: "{}".format(i) for i in range(1, 
-        int(shalyse.info['years'] / 2))},
+    max = max_mark,
+    marks = hori_opts_marks,
     value = shalyse.scenario['horizon'], 
 )
+
+result_text = {
+    "median": shalyse.stats['median']['display'],
+    "min": shalyse.stats['min']['display'],
+    "-1std": shalyse.stats['-1std']['display'],
+    "+1std": shalyse.stats['+1std']['display'],
+    "max": shalyse.stats['max']['display'],
+}
 
 # Application visualisation
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -100,27 +112,25 @@ app.layout = html.Div(
             children=[
                 html.Div(
                     children=[
-                        html.Div("Initial investment: (" + 
-                                 shalyse.info['currency'] + ")", 
-                                 className="menu-title"),
-                        dcc.Input(id="initial-invest", 
-                                  type="number", 
+                        html.Div(id = "init-invest-title",
+                                 className = "menu-title"),
+                        dcc.Input(id = "initial-invest", 
+                                  type = "number", 
                                   value = shalyse.scenario['initial'],
-                                  placeholder=shalyse.info['currency'], 
-                                  debounce=True,
-                                  style={"width": "192px", "height": "48px", 
+                                  placeholder = shalyse.info['currency'], 
+                                  debounce = True,
+                                  style = {"width": "192px", "height": "48px", 
                                          "font-size": "20px"}),
                     ],
                 ),
                 html.Div(
                     children=[
-                        html.Div("Regular contribution: (" + 
-                                 shalyse.info['currency'] + ")", 
-                                 className="menu-title"),
-                        dcc.Input(id="topup-contr", type="number", 
-                                  placeholder=shalyse.info['currency'], 
+                        html.Div(id = "topup-title",
+                                 className = "menu-title"),
+                        dcc.Input(id = "topup-contr", type="number", 
+                                  placeholder = shalyse.info['currency'], 
                                   value = shalyse.scenario['topup'],
-                                  debounce=True,
+                                  debounce = True,
                                   style={"width": "192px", "height": "48px", 
                                          "font-size": "20px"}),
                     ],
@@ -152,21 +162,16 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.H1(children="Result",
-                        className="header-title"),
-                        html.P(children="Expected: " + 
-                               shalyse.stats['median']['display'],
+                                className="header-title"),
+                        html.P(id = "expected-field",
                                className="header-description"),
-                        html.P(children="Absolute worst case: " + 
-                               shalyse.stats['min']['display'],
+                        html.P(id = "min-field",
                                className="header-description"),
-                        html.P(children="Worst case: " + 
-                               shalyse.stats['-1std']['display'],
+                        html.P(id = "worst-field",
                                className="header-description"),
-                        html.P(children="Best case: " + 
-                               shalyse.stats['+1std']['display'],
+                        html.P(id = "best-field",
                                className="header-description"),
-                        html.P(children="Absolute best case: " + 
-                               shalyse.stats['max']['display'],
+                        html.P(id = "max-field",
                                className="header-description"),
                     ],
                     className="card",
@@ -208,22 +213,31 @@ app.layout = html.Div(
 # Handle callback from interface
 @app.callback(
     [Output("model-chart", "figure"),
-    Output("price-chart", "figure")],
+    Output("price-chart", "figure"),
+    Output("init-invest-title", "children"),
+    Output("topup-title", "children"),
+    Output("hori-opts", "max"),
+    Output("hori-opts", "marks"),
+    Output("expected-field", "children"),
+    Output("min-field", "children"),
+    Output("worst-field", "children"),
+    Output("best-field", "children"),
+    Output("max-field", "children"),],
     [Input("ticker-filter", "value"),
     Input("initial-invest", "value"),
     Input("hori-opts", "value"),
     Input("topup-contr", "value"),
     Input("topup-freq", "value")],
     [State("model-chart", "figure"),
-    State("price-chart", "figure")],
+    State("price-chart", "figure"),],
 )
 
 def update_charts(ticker, init, horizon, topup, topfreq, model_fig, price_fig):
     global shalyse
 
     # Retrieve current model and price charts
-    model_fig=go.Figure(model_fig)
-    price_fig=go.Figure(price_fig)
+    model_fig = go.Figure(model_fig)
+    price_fig = go.Figure(price_fig)
 
     scenario = {
         'initial': init,      
@@ -269,7 +283,7 @@ def update_charts(ticker, init, horizon, topup, topfreq, model_fig, price_fig):
         y=shalyse.data['Adj Close'], 
         log_y=True,
         render_mode="SVG")
-        
+
     price_fig.update_layout(
         title_text=shalyse.info["shortName"],
         title_x=0.5,
@@ -277,7 +291,29 @@ def update_charts(ticker, init, horizon, topup, topfreq, model_fig, price_fig):
         yaxis_title_text= shalyse.info["currency"]
     )
 
-    return model_fig, price_fig
+    # Update all text fields
+    init_invest_title = "Initial investment: (" + shalyse.info['currency'] + ")"
+    topup_title = "Regular contribution: (" +  shalyse.info['currency'] + ")"
+
+    # Update horizon slider
+    hori_opts_max = int(shalyse.info['years'] / 2)
+    max_mark = int(shalyse.info['years'] / 2)
+    new_marks = range(1, max_mark, max(int(max_mark / 10), 1))
+    hori_opts_marks = {}
+    for mark in new_marks:
+        hori_opts_marks[int(mark)] = str(mark)
+    
+    # Update all result text fields
+    expected_field = "Expected: " + shalyse.stats['median']['display']
+    worst_worst_field = "Worst case: " + \
+        shalyse.stats['min']['display']
+    worst_field = "Expected min: " + shalyse.stats['-1std']['display']
+    best_field = "Expected max: " + shalyse.stats['+1std']['display']
+    best_best_field = "Best case: " + shalyse.stats['max']['display']
+
+    return model_fig, price_fig, init_invest_title, topup_title, \
+        hori_opts_max, hori_opts_marks, expected_field, worst_worst_field, \
+        worst_field, best_field, best_best_field
 
 if __name__ == "__main__":
     app.run_server(debug=True)
